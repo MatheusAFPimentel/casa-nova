@@ -5,15 +5,6 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { SEED_ITEMS } from "@/lib/seed-items";
 
-function generateInviteCode(): string {
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // avoid ambiguous chars
-  let code = "";
-  for (let i = 0; i < 6; i++) {
-    code += alphabet[Math.floor(Math.random() * alphabet.length)];
-  }
-  return code;
-}
-
 // Parses a price/amount field. Returns null for an empty (optional) value and
 // throws a user-facing message for anything that isn't a valid number, so bad
 // input surfaces as an error instead of being silently discarded as null.
@@ -88,23 +79,11 @@ export async function createHousehold(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  let household = null;
-  for (let attempt = 0; attempt < 5 && !household; attempt++) {
-    const inviteCode = generateInviteCode();
-    const { data, error } = await supabase
-      .from("households")
-      .insert({ name, invite_code: inviteCode })
-      .select()
-      .single();
-    if (!error) household = data;
-    else if (error.code !== "23505") throw error; // not a unique-violation, bail
-  }
-  if (!household) throw new Error("Não foi possível gerar um código de convite único.");
-
-  const { error: memberError } = await supabase
-    .from("household_members")
-    .insert({ household_id: household.id, user_id: user!.id });
-  if (memberError) throw memberError;
+  // Creates the household and the caller's membership atomically via a
+  // SECURITY DEFINER function — clients have no direct insert access to
+  // households/household_members (see supabase/schema.sql for why).
+  const { data: household, error } = await supabase.rpc("create_household", { p_name: name });
+  if (error) throw error;
 
   const { error: itemsError } = await supabase.from("items").insert(
     SEED_ITEMS.map((item) => ({
@@ -120,7 +99,7 @@ export async function createHousehold(formData: FormData) {
 }
 
 export async function joinHousehold(formData: FormData) {
-  const inviteCode = String(formData.get("invite_code") || "").trim().toUpperCase();
+  const inviteCode = String(formData.get("invite_code") || "").trim();
 
   const supabase = await createClient();
   const {
@@ -128,20 +107,13 @@ export async function joinHousehold(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: household, error } = await supabase
-    .from("households")
-    .select("id")
-    .eq("invite_code", inviteCode)
-    .single();
-
-  if (error || !household) {
+  // Validates the code and enrolls the caller atomically via a SECURITY
+  // DEFINER function — a direct table insert would let anyone self-enroll
+  // into any household_id they could see or guess, invite code or not.
+  const { error } = await supabase.rpc("join_household", { p_invite_code: inviteCode });
+  if (error) {
     redirect(`/onboarding?error=${encodeURIComponent("Código de convite inválido.")}`);
   }
-
-  const { error: memberError } = await supabase
-    .from("household_members")
-    .insert({ household_id: household!.id, user_id: user!.id });
-  if (memberError) throw memberError;
 
   revalidatePath("/dashboard");
   redirect("/dashboard");

@@ -84,17 +84,18 @@ alter table households enable row level security;
 alter table household_members enable row level security;
 alter table items enable row level security;
 
--- households: any authenticated user can look up a household by invite_code
--- (needed to join), and can create a new household for themselves.
-create policy "households_select_authenticated"
+-- households: readable only by members — NOT `using (true)`. A user who
+-- isn't a member yet never gets to see a household's invite_code, name,
+-- or budget; they only reach one via the SECURITY DEFINER functions below.
+create policy "households_select_members"
   on households for select
   to authenticated
-  using (true);
+  using (
+    id in (select household_id from household_members where user_id = auth.uid())
+  );
 
-create policy "households_insert_authenticated"
-  on households for insert
-  to authenticated
-  with check (true);
+-- No direct insert policy: households are only created via
+-- create_household() (SECURITY DEFINER, below), never a raw table insert.
 
 create policy "households_update_members"
   on households for update
@@ -110,10 +111,75 @@ create policy "household_members_select_own"
   to authenticated
   using (user_id = auth.uid());
 
-create policy "household_members_insert_self"
-  on household_members for insert
-  to authenticated
-  with check (user_id = auth.uid());
+-- No direct insert policy: membership rows are only created via
+-- create_household() / join_household() (SECURITY DEFINER, below). A plain
+-- `with check (user_id = auth.uid())` policy here would let anyone enroll
+-- themselves into ANY household_id they can see or guess, bypassing the
+-- invite code entirely.
+
+-- create_household: creates a new household + the caller's membership in
+-- one atomic, privileged operation, so clients never need standing INSERT
+-- access to either table.
+create or replace function create_household(p_name text)
+returns households
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_household households;
+  v_alphabet text := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  v_code text;
+begin
+  for attempt in 1..5 loop
+    v_code := '';
+    for pos in 1..6 loop
+      v_code := v_code || substr(v_alphabet, 1 + floor(random() * length(v_alphabet))::int, 1);
+    end loop;
+    begin
+      insert into households (name, invite_code) values (p_name, v_code) returning * into v_household;
+      exit;
+    exception when unique_violation then
+      if attempt = 5 then
+        raise exception 'Não foi possível gerar um código de convite único.';
+      end if;
+    end;
+  end loop;
+
+  insert into household_members (household_id, user_id) values (v_household.id, auth.uid());
+
+  return v_household;
+end;
+$$;
+
+grant execute on function create_household(text) to authenticated;
+
+-- join_household: validates the invite code and enrolls the caller inside
+-- one privileged transaction. Raises if the code doesn't match anything,
+-- which the app surfaces as "Código de convite inválido."
+create or replace function join_household(p_invite_code text)
+returns households
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_household households;
+begin
+  select * into v_household from households where invite_code = upper(p_invite_code);
+  if not found then
+    raise exception 'Código de convite inválido.';
+  end if;
+
+  insert into household_members (household_id, user_id)
+  values (v_household.id, auth.uid())
+  on conflict do nothing;
+
+  return v_household;
+end;
+$$;
+
+grant execute on function join_household(text) to authenticated;
 
 -- items: full CRUD restricted to members of the item's household.
 create policy "items_select_household_members"
