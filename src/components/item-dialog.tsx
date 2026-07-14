@@ -111,7 +111,7 @@ export function ItemDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="estimated_price">Preço estimado</Label>
+              <Label htmlFor="estimated_price">Preço estimado (por unidade)</Label>
               <Input
                 id="estimated_price"
                 name="estimated_price"
@@ -120,19 +120,31 @@ export function ItemDialog({
                 defaultValue={item?.estimated_price ?? ""}
               />
             </div>
-            {isEdit && (
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="actual_price">Preço real</Label>
-                <Input
-                  id="actual_price"
-                  name="actual_price"
-                  inputMode="decimal"
-                  placeholder="0,00"
-                  defaultValue={item?.actual_price ?? ""}
-                />
-              </div>
-            )}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="quantity">Quantidade</Label>
+              <Input
+                id="quantity"
+                name="quantity"
+                type="number"
+                min={1}
+                step={1}
+                defaultValue={item?.quantity ?? 1}
+              />
+            </div>
           </div>
+
+          {isEdit && (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="actual_price">Preço real (por unidade)</Label>
+              <Input
+                id="actual_price"
+                name="actual_price"
+                inputMode="decimal"
+                placeholder="0,00"
+                defaultValue={item?.actual_price ?? ""}
+              />
+            </div>
+          )}
 
           {isEdit && (
             <div className="flex flex-col gap-2">

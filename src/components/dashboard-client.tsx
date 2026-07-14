@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import {
   Tabs,
   TabsList,
@@ -12,9 +13,34 @@ import { ItemDialog } from "@/components/item-dialog";
 import { ItemCard } from "@/components/item-card";
 import { CATEGORIES } from "@/lib/seed-items";
 import { CATEGORY_ICONS } from "@/lib/category-icons";
+import { cn } from "@/lib/utils";
 import type { Item } from "@/lib/types";
 
 type StatusFilter = "todos" | "falta" | "comprado" | "presente";
+
+function categoryPanelId(category: string) {
+  return `category-panel-${category.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+}
+
+// Categories where nothing is left to buy start collapsed (nothing useful to
+// see there), everything else starts open — avoids both extremes (hiding
+// everything on first load, or not reducing the scroll at all).
+function defaultExpandedCategories(items: Item[]): Set<string> {
+  const byCategory = new Map<string, Item[]>();
+  for (const item of items) {
+    const list = byCategory.get(item.category) ?? [];
+    list.push(item);
+    byCategory.set(item.category, list);
+  }
+  const expanded = new Set<string>();
+  for (const [cat, catItems] of byCategory) {
+    const allResolved = catItems.every(
+      (i) => i.status === "comprado" || i.status === "presente",
+    );
+    if (!allResolved) expanded.add(cat);
+  }
+  return expanded;
+}
 
 export function DashboardClient({
   items,
@@ -27,6 +53,18 @@ export function DashboardClient({
   const [status, setStatus] = useState<StatusFilter>("todos");
   const [search, setSearch] = useState("");
   const [essentialOnly, setEssentialOnly] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() =>
+    defaultExpandedCategories(items),
+  );
+
+  function toggleCategory(cat: string) {
+    setExpandedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(cat)) next.delete(cat);
+      else next.add(cat);
+      return next;
+    });
+  }
 
   const filtered = useMemo(() => {
     return items.filter((item) => {
@@ -112,20 +150,35 @@ export function DashboardClient({
         </p>
       )}
 
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
         {[...grouped.entries()].map(([cat, catItems]) => {
           const Icon = CATEGORY_ICONS[cat];
+          const isExpanded = expandedCategories.has(cat);
+          const panelId = categoryPanelId(cat);
           return (
             <div key={cat} className="flex flex-col gap-2">
-              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
-                {Icon && <Icon className="size-4" />}
-                {cat} ({catItems.length})
+              <h2>
+                <button
+                  type="button"
+                  aria-expanded={isExpanded}
+                  aria-controls={panelId}
+                  onClick={() => toggleCategory(cat)}
+                  className="flex w-full cursor-pointer items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground"
+                >
+                  <ChevronDown
+                    className={cn("size-4 shrink-0 transition-transform", !isExpanded && "-rotate-90")}
+                  />
+                  {Icon && <Icon className="size-4 shrink-0" />}
+                  {cat} ({catItems.length})
+                </button>
               </h2>
-              <div className="flex flex-col gap-2">
-                {catItems.map((item) => (
-                  <ItemCard key={item.id} item={item} householdId={householdId} />
-                ))}
-              </div>
+              {isExpanded && (
+                <div id={panelId} className="flex flex-col gap-2">
+                  {catItems.map((item) => (
+                    <ItemCard key={item.id} item={item} householdId={householdId} />
+                  ))}
+                </div>
+              )}
             </div>
           );
         })}

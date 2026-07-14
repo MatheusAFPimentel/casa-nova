@@ -30,6 +30,7 @@ create table if not exists items (
   name text not null,
   estimated_price numeric,
   actual_price numeric,
+  quantity integer not null default 1 check (quantity > 0),
   status text not null default 'falta' check (status in ('falta', 'comprado', 'presente')),
   gifted_by text,
   priority text not null default 'pode_esperar' check (priority in ('essencial', 'pode_esperar')),

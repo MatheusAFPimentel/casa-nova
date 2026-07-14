@@ -5,6 +5,7 @@ export type Item = {
   name: string;
   estimated_price: number | null;
   actual_price: number | null;
+  quantity: number;
   status: "falta" | "comprado" | "presente";
   gifted_by: string | null;
   priority: "essencial" | "pode_esperar";

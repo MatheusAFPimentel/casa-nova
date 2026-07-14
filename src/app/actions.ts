@@ -20,6 +20,20 @@ function parseOptionalNumber(raw: string, fieldLabel: string): number | null {
   return value;
 }
 
+// Parses a quantity field. Empty defaults to 1 (quantity is never optional —
+// every item needs at least one). Throws for anything that isn't a positive
+// whole number.
+function parsePositiveInteger(raw: string, fieldLabel: string): number {
+  const trimmed = raw.trim();
+  if (trimmed === "") return 1;
+
+  const value = Number(trimmed);
+  if (!Number.isInteger(value) || value < 1) {
+    throw new Error(`${fieldLabel} inválida: "${raw}". Use um número inteiro de 1 ou mais.`);
+  }
+  return value;
+}
+
 // ---------------------------------------------------------------------------
 // Auth
 // ---------------------------------------------------------------------------
@@ -150,6 +164,7 @@ export async function addItem(formData: FormData) {
   const category = String(formData.get("category"));
   const name = String(formData.get("name"));
   const estimatedPrice = parseOptionalNumber(String(formData.get("estimated_price") || ""), "Preço estimado");
+  const quantity = parsePositiveInteger(String(formData.get("quantity") || ""), "Quantidade");
   const priority = String(formData.get("priority") || "pode_esperar");
   const store = String(formData.get("store") || "") || null;
   const link = String(formData.get("link") || "") || null;
@@ -161,6 +176,7 @@ export async function addItem(formData: FormData) {
     category,
     name,
     estimated_price: estimatedPrice,
+    quantity,
     priority,
     store,
     link,
@@ -177,6 +193,7 @@ export async function updateItem(formData: FormData) {
   const name = String(formData.get("name"));
   const estimatedPrice = parseOptionalNumber(String(formData.get("estimated_price") || ""), "Preço estimado");
   const actualPrice = parseOptionalNumber(String(formData.get("actual_price") || ""), "Preço real");
+  const quantity = parsePositiveInteger(String(formData.get("quantity") || ""), "Quantidade");
   const status = String(formData.get("status") || "falta");
   const giftedBy = String(formData.get("gifted_by") || "") || null;
   const priority = String(formData.get("priority") || "pode_esperar");
@@ -192,6 +209,7 @@ export async function updateItem(formData: FormData) {
       name,
       estimated_price: estimatedPrice,
       actual_price: actualPrice,
+      quantity,
       status,
       gifted_by: giftedBy,
       priority,

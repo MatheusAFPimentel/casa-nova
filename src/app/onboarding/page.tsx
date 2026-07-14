@@ -35,7 +35,8 @@ export default async function OnboardingPage({
   if (membership) redirect("/dashboard");
 
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center gap-4 bg-muted/40 p-4">
+    <main className="flex min-h-svh flex-col items-center justify-center gap-4 bg-muted/40 p-4">
+      <h1 className="sr-only">Configurar seu lar no Casa Nova</h1>
       <div className="flex w-full max-w-3xl items-center justify-between">
         <p className="font-heading text-xl text-primary">Casa Nova</p>
         <div className="flex items-center gap-2">
@@ -109,6 +110,6 @@ export default async function OnboardingPage({
           </CardContent>
         </Card>
       </div>
-    </div>
+    </main>
   );
 }

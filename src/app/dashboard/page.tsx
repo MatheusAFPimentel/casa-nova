@@ -54,14 +54,16 @@ export default async function DashboardPage() {
   // Gifted items don't need money planned for them anymore, so they're
   // excluded from the estimate used as the budget reference.
   const estimatedTotal = itemList.reduce(
-    (sum, item) => sum + (item.status === "presente" ? 0 : (item.estimated_price ?? 0)),
+    (sum, item) =>
+      sum + (item.status === "presente" ? 0 : (item.estimated_price ?? 0) * item.quantity),
     0,
   );
   // Only counts a confirmed actual_price as "spent" — falling back to the
   // estimate here would make "Gasto" look like real money that was never
   // actually recorded against the item.
   const spentTotal = itemList.reduce(
-    (sum, item) => sum + (item.status === "comprado" ? (item.actual_price ?? 0) : 0),
+    (sum, item) =>
+      sum + (item.status === "comprado" ? (item.actual_price ?? 0) * item.quantity : 0),
     0,
   );
   const boughtCount = itemList.filter((item) => item.status === "comprado").length;
@@ -69,7 +71,7 @@ export default async function DashboardPage() {
   const moveInMessage = getMoveInMessage(household?.move_in_date ?? null);
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6 p-4 sm:p-6">
+    <main className="mx-auto flex max-w-4xl flex-col gap-6 p-4 sm:p-6">
       <header className="flex items-center justify-between">
         <div>
           <h1 className="font-heading text-2xl font-medium sm:text-3xl">
@@ -114,6 +116,6 @@ export default async function DashboardPage() {
       />
 
       <DashboardClient items={itemList} householdId={membership.household_id} />
-    </div>
+    </main>
   );
 }

@@ -40,7 +40,8 @@ export default async function SettingsPage({
     .single();
 
   return (
-    <div className="mx-auto flex max-w-xl flex-col gap-6 p-4 sm:p-6">
+    <main className="mx-auto flex max-w-xl flex-col gap-6 p-4 sm:p-6">
+      <h1 className="sr-only">Configurações</h1>
       <div className="flex items-center gap-2">
         <Button
           variant="ghost"
@@ -118,6 +119,6 @@ export default async function SettingsPage({
           </form>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 }

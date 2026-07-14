@@ -19,7 +19,8 @@ export default async function LoginPage({
   const { error, message } = await searchParams;
 
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted/40 p-4">
+    <main className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted/40 p-4">
+      <h1 className="sr-only">Entrar no Casa Nova</h1>
       <p className="font-heading text-2xl text-primary">Casa Nova</p>
       <Card className="w-full max-w-sm">
         <CardHeader>
@@ -58,6 +59,6 @@ export default async function LoginPage({
           </p>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 }

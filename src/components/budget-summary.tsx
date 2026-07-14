@@ -27,7 +27,11 @@ export function BudgetSummary({
         <CardTitle className="text-lg">Orçamento</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <Progress value={progress} />
+        <Progress
+          value={progress}
+          aria-label="Progresso do orçamento"
+          aria-valuetext={`${formatBRL(spentTotal)} de ${formatBRL(reference)} gastos`}
+        />
         <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-5">
           <div>
             <p className="text-muted-foreground">Gasto</p>
