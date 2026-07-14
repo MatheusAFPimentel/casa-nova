@@ -26,6 +26,10 @@ export function PriceLogSection({ itemId }: { itemId: string }) {
   }
 
   useEffect(() => {
+    // Intentional: fetch-on-mount/on-itemId-change from the browser Supabase
+    // client, not derived state — there's no external subscription to
+    // attach to instead.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refetch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [itemId]);

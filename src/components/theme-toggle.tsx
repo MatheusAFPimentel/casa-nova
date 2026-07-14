@@ -9,6 +9,9 @@ export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
+  // Intentional: this is the standard hydration-safe "mounted" guard (the
+  // server can't know the client's theme), not derived/redundant state.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setMounted(true), []);
 
   return (
