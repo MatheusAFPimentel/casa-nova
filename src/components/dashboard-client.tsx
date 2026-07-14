@@ -172,13 +172,24 @@ export function DashboardClient({
                   {cat} ({catItems.length})
                 </button>
               </h2>
-              {isExpanded && (
-                <div id={panelId} className="flex flex-col gap-2">
-                  {catItems.map((item) => (
-                    <ItemCard key={item.id} item={item} householdId={householdId} />
-                  ))}
+              <div
+                className={cn(
+                  "grid transition-[grid-template-rows] duration-[250ms] ease-[cubic-bezier(0.23,1,0.32,1)]",
+                  isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                )}
+              >
+                <div className="overflow-hidden">
+                  <div
+                    id={panelId}
+                    aria-hidden={!isExpanded}
+                    className="flex flex-col gap-2 pt-2"
+                  >
+                    {catItems.map((item) => (
+                      <ItemCard key={item.id} item={item} householdId={householdId} />
+                    ))}
+                  </div>
                 </div>
-              )}
+              </div>
             </div>
           );
         })}
