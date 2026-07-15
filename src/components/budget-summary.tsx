@@ -32,30 +32,30 @@ export function BudgetSummary({
           aria-label="Progresso do orçamento"
           aria-valuetext={`${formatBRL(spentTotal)} de ${formatBRL(reference)} gastos`}
         />
-        <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-5">
+        <div className="grid grid-cols-2 gap-4 border-t border-dashed border-border pt-3 text-sm sm:grid-cols-5">
           <div>
             <p className="text-muted-foreground">Gasto</p>
-            <p className="font-semibold">{formatBRL(spentTotal)}</p>
+            <p className="font-mono font-semibold tabular-nums">{formatBRL(spentTotal)}</p>
           </div>
           <div>
             <p className="text-muted-foreground">
               {budgetLimit ? "Orçamento" : "Estimado"}
             </p>
-            <p className="font-semibold">{formatBRL(reference)}</p>
+            <p className="font-mono font-semibold tabular-nums">{formatBRL(reference)}</p>
           </div>
           <div>
             <p className="text-muted-foreground">Restante</p>
-            <p className="font-semibold">{formatBRL(remaining)}</p>
+            <p className="font-mono font-semibold tabular-nums">{formatBRL(remaining)}</p>
           </div>
           <div>
             <p className="text-muted-foreground">Itens comprados</p>
-            <p className="font-semibold">
+            <p className="font-mono font-semibold tabular-nums">
               {boughtCount} / {totalCount}
             </p>
           </div>
           <div>
             <p className="text-muted-foreground">Presentes</p>
-            <p className="font-semibold">{giftedCount}</p>
+            <p className="font-mono font-semibold tabular-nums">{giftedCount}</p>
           </div>
         </div>
       </CardContent>

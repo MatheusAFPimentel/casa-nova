@@ -12,15 +12,12 @@ import type { Item } from "@/lib/types";
 export function ItemCard({ item, householdId }: { item: Item; householdId: string }) {
   const [isPending, startTransition] = useTransition();
 
+  const hasPrice = item.estimated_price !== null || item.actual_price !== null;
   const hasMeta =
-    item.estimated_price !== null ||
-    item.actual_price !== null ||
-    (item.status === "presente" && item.gifted_by) ||
-    item.store ||
-    item.link;
+    (item.status === "presente" && item.gifted_by) || item.store || item.link;
 
   return (
-    <div className="flex items-start gap-3 rounded-lg border p-3">
+    <div className="flex items-start gap-3 rounded-lg border border-dashed p-3">
       <Checkbox
         checked={item.status === "comprado"}
         disabled={isPending}
@@ -45,18 +42,12 @@ export function ItemCard({ item, householdId }: { item: Item; householdId: strin
             {item.name}
           </p>
           {item.quantity > 1 && <Badge variant="outline">×{item.quantity}</Badge>}
-          {item.status === "comprado" && <Badge variant="secondary">Comprado</Badge>}
-          {item.status === "presente" && <Badge variant="secondary">Presente</Badge>}
+          {item.status === "comprado" && <Badge variant="stamp">Comprado</Badge>}
+          {item.status === "presente" && <Badge variant="stamp">Presente</Badge>}
           {item.priority === "essencial" && <Badge variant="default">Essencial</Badge>}
         </div>
         {hasMeta && (
           <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-            {item.estimated_price !== null && (
-              <span>Estimado: {formatBRL(item.estimated_price)}</span>
-            )}
-            {item.actual_price !== null && (
-              <span>Real: {formatBRL(item.actual_price)}</span>
-            )}
             {item.status === "presente" && item.gifted_by && (
               <span>Presente de: {item.gifted_by}</span>
             )}
@@ -74,6 +65,15 @@ export function ItemCard({ item, householdId }: { item: Item; householdId: strin
           </div>
         )}
       </div>
+
+      {hasPrice && (
+        <div className="shrink-0 text-right font-mono text-sm tabular-nums text-muted-foreground">
+          {item.estimated_price !== null && (
+            <p>Est. {formatBRL(item.estimated_price)}</p>
+          )}
+          {item.actual_price !== null && <p>Real {formatBRL(item.actual_price)}</p>}
+        </div>
+      )}
 
       <div className="flex shrink-0 gap-1">
         <ItemDialog

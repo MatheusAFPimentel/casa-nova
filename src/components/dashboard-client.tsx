@@ -163,13 +163,16 @@ export function DashboardClient({
                   aria-expanded={isExpanded}
                   aria-controls={panelId}
                   onClick={() => toggleCategory(cat)}
-                  className="flex w-full cursor-pointer items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground"
+                  className="flex w-full cursor-pointer items-center gap-2 border-b border-dashed border-border pb-1.5 font-heading text-base uppercase tracking-wider text-muted-foreground hover:text-foreground"
                 >
                   <ChevronDown
                     className={cn("size-4 shrink-0 transition-transform", !isExpanded && "-rotate-90")}
                   />
                   {Icon && <Icon className="size-4 shrink-0" />}
-                  {cat} ({catItems.length})
+                  <span>{cat}</span>
+                  <span className="font-mono text-xs normal-case tracking-normal tabular-nums text-muted-foreground">
+                    ({catItems.length})
+                  </span>
                 </button>
               </h2>
               <div
